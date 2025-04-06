@@ -1,4 +1,4 @@
-# This stub files supports in Python 3.9+, I guess..
+# This stub file supports in Python 3.8+
 
 from typing import overload, Callable, Dict, Iterable, List, Literal, Optional, Set, Tuple, Union
 
@@ -35,7 +35,7 @@ class TextWrapper:
         minimum_width: bool = True,
         justify_last_line: bool = False,
         break_on_hyphens: bool = True,
-        sizefunc: Optional[Callable[[str], Union[Tuple[Union[int, float], Union[int, float]], int, float]]] = None,
+        sizefunc: Optional[Callable[[str], Union[Tuple[Union[int, float], Union[int, float]], int, float]]] = None
     ) -> None: ...
     def __repr__(self) -> str: ...
     def __str__(self) -> str: ...
@@ -51,7 +51,7 @@ class TextWrapper:
     @property
     def method(self) -> Literal['mono', 'word']: ...
     @property
-    def alignment(self) -> Literal['left', 'center', 'right', 'fill', 'fill-left', 'fill-center', 'fill-right']: ...
+    def alignment(self) -> Literal['left', 'center', 'right', 'fill-left', 'fill-center', 'fill-right']: ...
     @property
     def placeholder(self) -> str: ...
     @property
@@ -69,7 +69,8 @@ class TextWrapper:
     @property
     def break_on_hyphens(self) -> bool: ...
     @property
-    def sizefunc(self) -> Callable[[str], Union[Tuple[Union[int, float], Union[int, float]], int, float]]: ...
+    def sizefunc(self) -> Union[Callable[[str], Union[Tuple[Union[int, float], Union[int, float]],
+                                                      int, float]], None]: ...
 
     # Setters ----------------------------------------------------------------------------------------------------------
 

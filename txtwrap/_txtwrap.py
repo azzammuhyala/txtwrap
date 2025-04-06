@@ -3,9 +3,22 @@ from re import compile, escape
 
 # Tools ----------------------------------------------------------------------------------------------------------------
 
+pdict = type('pdict', (dict,), {
+    '__repr__': lambda self : '{}({{\n    {}\n}})'.format(
+            self.__class__.__name__,
+            ',\n    '.join(
+                '{!r}: {!r}'.format(key, value)
+                for key, value in self.items()
+            )
+        ) if self else self.__class__.__name__ + '()',
+    '__setattr__': dict.__setitem__,
+    '__getattr__': lambda self, key: self.get(key, None),
+    '__delattr__': dict.__delitem__
+})
+
 split_hyphenated = compile(r'(?<=-)(?=(?!-).)').split
 
-def mono(text, width, fillchar, break_on_hyphens, lenfunc, sanitize, split_separator):
+def mono(text, width, _0, _1, lenfunc, sanitize, _2):
     wrapped = []
     current_char = ''
 
@@ -38,8 +51,7 @@ def word(text, width, fillchar, break_on_hyphens, lenfunc, sanitize, split_separ
 
             if break_on_hyphens:
                 for part in split_hyphenated(word):
-                    for wrapped_part in mono(part, width, fillchar, break_on_hyphens, lenfunc, sanitize,
-                                             split_separator):
+                    for wrapped_part in mono(part, width, 0, 0, lenfunc, sanitize, 0):
                         if lenfunc(current_line + wrapped_part) <= width:
                             current_line += wrapped_part
                         else:
@@ -47,7 +59,7 @@ def word(text, width, fillchar, break_on_hyphens, lenfunc, sanitize, split_separ
                                 wrapped.append(current_line)
                             current_line = wrapped_part
             else:
-                for part in mono(word, width, fillchar, break_on_hyphens, lenfunc, sanitize, split_separator):
+                for part in mono(word, width, 0, 0, lenfunc, sanitize, 0):
                     if lenfunc(current_line + part) <= width:
                         current_line += part
                     else:
@@ -60,7 +72,7 @@ def word(text, width, fillchar, break_on_hyphens, lenfunc, sanitize, split_separ
 
     return wrapped
 
-def jusitfy_align_left(aligned_positions, text, width, text_width, offset_y):
+def jusitfy_align_left(aligned_positions, text, _0, _1, offset_y):
     aligned_positions.append((0, offset_y, text))
 
 def justify_align_center(aligned_positions, text, width, text_width, offset_y):
@@ -82,7 +94,7 @@ def justify_fillstr_right(justified_lines, text, width, text_width, fillchar):
 
 # Identities -----------------------------------------------------------------------------------------------------------
 
-__version__ = '2.3.0'
+__version__ = '2.3.1'
 __author__ = 'azzammuhyala'
 __license__ = 'MIT'
 
@@ -138,13 +150,12 @@ class TextWrapper:
         [PyPi](https://pypi.org/project/txtwrap) for details.
         """
 
-        self._d = {}  # dictionary to store a metadata and private variables
+        self._d = pdict()  # dictionary to store a metadata and private variables
 
         self.width = width
         self.line_padding = line_padding
         self.method = method
         self.alignment = alignment
-        self.sizefunc = sizefunc
         self.placeholder = placeholder
         self.fillchar = fillchar
         self.separator = separator
@@ -153,14 +164,24 @@ class TextWrapper:
         self.minimum_width = minimum_width
         self.justify_last_line = justify_last_line
         self.break_on_hyphens = break_on_hyphens
+        self.sizefunc = sizefunc
 
     def __repr__(self):
-        return 'TextWrapper({})'.format(', '.join('{}={!r}'.format(name, self._d.get(name))
-                                                  for name in self.__init__.__code__.co_varnames
-                                                  if name != 'self'))
+        return '{}({})'.format(
+            self.__class__.__name__,
+            ', '.join(
+                '{}={!r}'.format(name, getattr(self, name))
+                for name in self.__init__.__code__.co_varnames
+                if name != 'self'
+            )
+        )
 
     def __str__(self):
-        return '<{}.TextWrapper object at 0x{}>'.format(self.__class__.__module__, hex(id(self))[2:].upper().zfill(16))
+        return '<{}.{} object at 0x{}>'.format(
+            self.__class__.__module__,
+            self.__class__.__name__,
+            hex(id(self))[2:].upper().zfill(16)
+        )
 
     def __copy__(self):
         return self.copy()
@@ -172,55 +193,55 @@ class TextWrapper:
 
     @property
     def width(self):
-        return self._d['width']
+        return self._d.width
 
     @property
     def line_padding(self):
-        return self._d['line_padding']
+        return self._d.line_padding
 
     @property
     def method(self):
-        return self._d['method']
+        return self._d.method
 
     @property
     def alignment(self):
-        return self._d['alignment']
+        return self._d.alignment
 
     @property
     def placeholder(self):
-        return self._d['placeholder']
+        return self._d.placeholder
 
     @property
     def fillchar(self):
-        return self._d['fillchar']
+        return self._d.fillchar
 
     @property
     def separator(self):
-        return self._d['separator']
+        return self._d.separator
 
     @property
     def max_lines(self):
-        return self._d['max_lines']
+        return self._d.max_lines
 
     @property
     def preserve_empty(self):
-        return self._d['preserve_empty']
+        return self._d.preserve_empty
 
     @property
     def minimum_width(self):
-        return self._d['minimum_width']
+        return self._d.minimum_width
 
     @property
     def justify_last_line(self):
-        return self._d['justify_last_line']
+        return self._d.justify_last_line
 
     @property
     def break_on_hyphens(self):
-        return self._d['break_on_hyphens']
+        return self._d.break_on_hyphens
 
     @property
     def sizefunc(self):
-        return self._d['sizefunc']
+        return self._d._sizefunc
 
     # Setters ----------------------------------------------------------------------------------------------------------
 
@@ -230,9 +251,7 @@ class TextWrapper:
             raise TypeError("width must be an integer or float")
         if new <= 0:
             raise ValueError("width must be greater than 0")
-        if (self._d.get('max_lines', None) is not None and new < self._d.get('length_placeholder', new)):
-            raise ValueError("width must be greater than length of the placeholder")
-        self._d['width'] = new
+        self._d.width = new
 
     @line_padding.setter
     def line_padding(self, new):
@@ -240,7 +259,7 @@ class TextWrapper:
             raise TypeError("line_padding must be a integer or float")
         if new < 0:
             raise ValueError("line_padding must be equal to or greater than 0")
-        self._d['line_padding'] = new
+        self._d.line_padding = new
 
     @method.setter
     def method(self, new):
@@ -249,11 +268,11 @@ class TextWrapper:
         new = new.strip().lower()
         if new not in {'mono', 'word'}:
             raise ValueError("method={!r} is invalid, must be 'mono' or 'word'".format(new))
-        self._d['method'] = new
+        self._d.method = new
         if new == 'mono':
-            self._d['wrapfunc'] = mono
+            self._d.wrapfunc = mono
         elif new == 'word':
-            self._d['wrapfunc'] = word
+            self._d.wrapfunc = word
 
     @alignment.setter
     def alignment(self, new):
@@ -263,33 +282,30 @@ class TextWrapper:
         if new not in {'left', 'center', 'right', 'fill', 'fill-left', 'fill-center', 'fill-right'}:
             raise ValueError("alignment={!r} is invalid, must be 'left', 'center', 'right', 'fill', 'fill-left', "
                              "'fill-center', or 'fill-right'".format(new))
-        self._d['alignment'] = new = 'fill-left' if new == 'fill' else new
+        self._d.alignment = new = 'fill-left' if new == 'fill' else new
         if new.endswith('left'):
-            self._d['align_justify'] = jusitfy_align_left
-            self._d['fillstr_justify'] = justify_fillstr_left
+            self._d.align_justify = jusitfy_align_left
+            self._d.fillstr_justify = justify_fillstr_left
         elif new.endswith('center'):
-            self._d['align_justify'] = justify_align_center
-            self._d['fillstr_justify'] = justify_fillstr_center
+            self._d.align_justify = justify_align_center
+            self._d.fillstr_justify = justify_fillstr_center
         elif new.endswith('right'):
-            self._d['align_justify'] = justify_align_right
-            self._d['fillstr_justify'] = justify_fillstr_right
+            self._d.align_justify = justify_align_right
+            self._d.fillstr_justify = justify_fillstr_right
 
     @placeholder.setter
     def placeholder(self, new):
         if not isinstance(new, str):
             raise TypeError("placeholder must be a string")
-        self._d['placeholder'] = new
-        self._d['length_placeholder'] = length = self._d['lenfunc'](new)
-        if self._d.get('max_lines', None) is not None and self._d['width'] < length:
-            raise ValueError("width must be greater than length of the placeholder")
+        self._d.placeholder = new
 
     @fillchar.setter
     def fillchar(self, new):
         if not isinstance(new, str):
             raise TypeError("fillchar must be a string")
-        self._d['fillchar'] = new
+        self._d.fillchar = new
         split = compile(escape(new)).split
-        self._d['split_fillchar'] = lambda string : [s for s in split(string) if s]
+        self._d.split_fillchar = lambda string : [s for s in split(string) if s]
 
     @separator.setter
     def separator(self, new):
@@ -297,15 +313,15 @@ class TextWrapper:
             raise TypeError("separator must be a string, iterable, or None")
         if isinstance(new, Iterable) and not all(isinstance(s, str) for s in new):
             raise ValueError("separator must be an iterable containing of strings")
-        self._d['separator'] = new
+        self._d.separator = new
         if new is None:
-            self._d['split_separator'] = lambda s : s.split()
+            self._d.split_separator = lambda s : s.split()
             return
         elif isinstance(new, str): 
             split = compile(escape(new)).split
         else:
             split = compile('|'.join(map(escape, new))).split
-        self._d['split_separator'] = lambda string : [s for s in split(string) if s]
+        self._d.split_separator = lambda string : [s for s in split(string) if s]
 
     @max_lines.setter
     def max_lines(self, new):
@@ -314,31 +330,30 @@ class TextWrapper:
         if new is not None:
             if new <= 0:
                 raise ValueError("max_lines must be greater than 0")
-            if self._d['width'] < self._d['length_placeholder']:
-                raise ValueError("width must be greater than length of the placeholder")
-        self._d['max_lines'] = new
+        self._d.max_lines = new
 
     @preserve_empty.setter
     def preserve_empty(self, new):
-        self._d['preserve_empty'] = new
+        self._d.preserve_empty = bool(new)
 
     @minimum_width.setter
     def minimum_width(self, new):
-        self._d['minimum_width'] = new
+        self._d.minimum_width = bool(new)
 
     @justify_last_line.setter
     def justify_last_line(self, new):
-        self._d['justify_last_line'] = new
+        self._d.justify_last_line = bool(new)
 
     @break_on_hyphens.setter
     def break_on_hyphens(self, new):
-        self._d['break_on_hyphens'] = new
+        self._d.break_on_hyphens = bool(new)
 
     @sizefunc.setter
     def sizefunc(self, new):
+        self._d._sizefunc = new
         if new is None:
-            self._d['sizefunc'] = lambda s : (len(s), 1)
-            self._d['lenfunc'] = len
+            self._d.sizefunc = lambda s : (len(s), 1)
+            self._d.lenfunc = len
             return
         if not callable(new):
             raise TypeError("sizefunc must be a callable")
@@ -354,52 +369,55 @@ class TextWrapper:
                 raise ValueError("sizefunc returned width must be equal to or greater than 0")
             if test[1] < 0:
                 raise ValueError("sizefunc returned height must be equal to or greater than 0")
-            self._d['sizefunc'] = new
-            self._d['lenfunc'] = lambda s : new(s)[0]
+            self._d.sizefunc = new
+            self._d.lenfunc = lambda s : new(s)[0]
         elif isinstance(test, (int, float)):
             if test < 0:
                 raise ValueError("sizefunc (length) must be equal to or greater than 0")
-            self._d['sizefunc'] = None
-            self._d['lenfunc'] = new
+            self._d.sizefunc = None
+            self._d.lenfunc = new
         else:
             raise TypeError("sizefunc must be returned a tuple for size or a single value for width (length)")
 
     # Methods ----------------------------------------------------------------------------------------------------------
 
     def copy(self):
-        return TextWrapper(width=self._d['width'], line_padding=self._d['line_padding'], method=self._d['method'],
-                           alignment=self._d['alignment'], placeholder=self._d['placeholder'],
-                           fillchar=self._d['fillchar'], separator=self._d['separator'], max_lines=self._d['max_lines'],
-                           preserve_empty=self._d['preserve_empty'], minimum_width=self._d['minimum_width'],
-                           justify_last_line=self._d['justify_last_line'], break_on_hyphens=self._d['break_on_hyphens'],
-                           sizefunc=self._d['sizefunc'])
+        return TextWrapper(width=self._d.width, line_padding=self._d.line_padding, method=self._d.method,
+                           alignment=self._d.alignment, placeholder=self._d.placeholder, fillchar=self._d.fillchar,
+                           separator=self._d.separator, max_lines=self._d.max_lines,
+                           preserve_empty=self._d.preserve_empty, minimum_width=self._d.minimum_width,
+                           justify_last_line=self._d.justify_last_line, break_on_hyphens=self._d.break_on_hyphens,
+                           sizefunc=self._d._sizefunc)
 
     def sanitize(self, text):
         if not isinstance(text, str):
             raise TypeError("text must be a string")
 
-        return self._d['fillchar'].join(self._d['split_separator'](text))
+        return self._d.fillchar.join(self._d.split_separator(text))
 
     def wrap(self, text, return_details=False, *, _one_line=False):
         if not isinstance(text, str):
             raise TypeError("text must be a string")
 
-        wrapfunc = self._d['wrapfunc']
-        width = self._d['width']
-        placeholder = self._d['placeholder']
-        fillchar = self._d['fillchar']
-        split_separator = self._d['split_separator']
-        max_lines = self._d['max_lines']
-        preserve_empty = self._d['preserve_empty']
-        break_on_hyphens = self._d['break_on_hyphens']
-        lenfunc = self._d['lenfunc']
+        wrapfunc = self._d.wrapfunc
+        width = self._d.width
+        placeholder = self._d.placeholder
+        fillchar = self._d.fillchar
+        split_separator = self._d.split_separator
+        max_lines = self._d.max_lines
+        preserve_empty = self._d.preserve_empty
+        break_on_hyphens = self._d.break_on_hyphens
+        lenfunc = self._d.lenfunc
 
         if _one_line:
             max_lines = 1
         else:
-            max_lines = self._d['max_lines']
+            max_lines = self._d.max_lines
 
         set_max_lines = max_lines is not None
+
+        if set_max_lines and width < lenfunc(placeholder):
+            raise ValueError("width must be greater than length of the placeholder")
 
         wrapped = []
         indiced = set()
@@ -440,12 +458,12 @@ class TextWrapper:
         if not isinstance(text, str):
             raise TypeError("text must be a string")
 
-        width = self._d['width']
-        line_padding = self._d['line_padding']
-        alignment = self._d['alignment']
-        justify = self._d['align_justify']
-        minimum_width = self._d['minimum_width']
-        sizefunc = self._d['sizefunc']
+        width = self._d.width
+        line_padding = self._d.line_padding
+        alignment = self._d.alignment
+        justify = self._d.align_justify
+        minimum_width = self._d.minimum_width
+        sizefunc = self._d.sizefunc
 
         if sizefunc is None:
             raise TypeError("sizefunc must be a size")
@@ -471,8 +489,8 @@ class TextWrapper:
                 offset_y += height_line + line_padding
 
         else:
-            split_fillchar = self._d['split_fillchar']
-            no_fill_last_line = not self._d['justify_last_line']
+            split_fillchar = self._d.split_fillchar
+            no_fill_last_line = not self._d.justify_last_line
             lines_word = [split_fillchar(line) for line in wrapped]
 
             if minimum_width and any(
@@ -505,8 +523,8 @@ class TextWrapper:
                 offset_y += height_line + line_padding
 
         if return_details:
-            return {'aligned': aligned, 'wrapped': wrapped, 'indiced': indiced, 'size': (use_width,
-                                                                                         offset_y - line_padding)}
+            return {'aligned': aligned, 'wrapped': wrapped, 'indiced': indiced,
+                    'size': (use_width, offset_y - line_padding)}
 
         return aligned
 
@@ -514,13 +532,13 @@ class TextWrapper:
         if not isinstance(text, str):
             raise TypeError("text must be a string")
 
-        width = self._d['width']
-        line_padding = self._d['line_padding']
-        alignment = self._d['alignment']
-        fillchar = self._d['fillchar']
-        justify = self._d['fillstr_justify']
-        minimum_width = self._d['minimum_width']
-        lenfunc = self._d['lenfunc']
+        width = self._d.width
+        line_padding = self._d.line_padding
+        alignment = self._d.alignment
+        fillchar = self._d.fillchar
+        justify = self._d.fillstr_justify
+        minimum_width = self._d.minimum_width
+        lenfunc = self._d.lenfunc
 
         wrapped_info = self.wrap(text, True)
         wrapped = wrapped_info['wrapped']
@@ -545,8 +563,8 @@ class TextWrapper:
                     justified_lines.append(fill_line_padding)
 
         else:
-            split_fillchar = self._d['split_fillchar']
-            no_fill_last_line = not self._d['justify_last_line']
+            split_fillchar = self._d.split_fillchar
+            no_fill_last_line = not self._d.justify_last_line
             lines_word = [split_fillchar(line) for line in wrapped]
 
             if minimum_width and any(

@@ -5,7 +5,7 @@ with open('README.md', encoding='utf-8') as readme:
 
 setup(
     name='txtwrap',
-    version='2.3.0',
+    version='2.3.1',
     description='A tool for wrapping and filling text.',
     long_description=long_description,
     long_description_content_type='text/markdown',

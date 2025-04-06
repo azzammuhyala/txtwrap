@@ -4,13 +4,12 @@ A tool for wrapping and filling text.🔨
 - `LOREM_IPSUM_WORDS`
 - `LOREM_IPSUM_SENTENCES`
 - `LOREM_IPSUM_PARAGRAPHS`
-- `TextWrapper` (✅ Updated)
-- `sanitize` (➕ New)
-- `wrap` (✅ Updated)
-- `align` (✅ Updated)
-- `fillstr` (✅ Updated)
-- `printwrap` (✅ Updated)
-- `shorten` (✅ Updated)
+- `TextWrapper` (❇️ Fixed)
+- `sanitize`
+- `wrap`
+- `align`
+- `fillstr`
+- `shorten`
 
 # Documents📄
 This module is inspired by the [`textwrap`](https://docs.python.org/3/library/textwrap.html) module, which provides
