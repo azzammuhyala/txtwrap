@@ -1,15 +1,19 @@
 # TxTWrap🔡
 A tool for wrapping and filling text.🔨
 
-- `LOREM_IPSUM_WORDS`
-- `LOREM_IPSUM_SENTENCES`
-- `LOREM_IPSUM_PARAGRAPHS`
-- `TextWrapper` (❇️ Fixed)
-- `sanitize`
-- `wrap`
-- `align`
-- `fillstr`
-- `shorten`
+Version: **2.3.2** <br>
+Python requires version: **3.3.0+** <br>
+Python stub file requires version: **3.8.0+**
+
+- [`LOREM_IPSUM_WORDS`](#lorem-ipsum)
+- [`LOREM_IPSUM_SENTENCES`](#lorem-ipsum)
+- [`LOREM_IPSUM_PARAGRAPHS`](#lorem-ipsum)
+- [`TextWrapper`](#textwrapper) (🔨 Fixed)
+- [`sanitize`](#sanitizetext)
+- [`wrap`](#wraptext-return_detailsfalse)
+- [`align`](#aligntext-return_detailsfalse)
+- [`fillstr`](#fillstrtext)
+- [`shorten`](#shortentext)
 
 # Documents📄
 This module is inspired by the [`textwrap`](https://docs.python.org/3/library/textwrap.html) module, which provides
@@ -17,17 +21,18 @@ several useful functions, along with the [`TextWrapper`](#textwrapper), class th
 
 The difference between [`txtwrap`](https://pypi.org/project/txtwrap) and
 [`textwrap`](https://docs.python.org/3/library/textwrap.html) is that this module is designed not only for wrapping and
-filling monospace fonts but also for other font types, such as Arial, Times New Roman, and more.
+filling _monospace fonts_ but also for other font types, such as _Arial_, _Times New Roman_, and more.
 
 <h1></h1>
 
+## Lorem ipsum
 ```py
 LOREM_IPSUM_WORDS
 LOREM_IPSUM_SENTENCES
 LOREM_IPSUM_PARAGRAPHS
 ```
-A collection of words, sentences, and paragraphs that can be used as examples.
-- `LOREM_IPSUM_WORDS` contains a short Lorem Ipsum sentence.
+A _Lorem Ipsum_ collection of words, sentences, and paragraphs that can be used as examples.
+- `LOREM_IPSUM_WORDS` contains a short sentence.
 - `LOREM_IPSUM_SENTENCES` contains a slightly longer paragraph.
 - `LOREM_IPSUM_PARAGRAPHS` contains several longer paragraphs.
 
@@ -84,15 +89,14 @@ as each attribute has type checking, which may reduce performance.
 <h1></h1>
 
 #### **`method`**
-(Default: `'word'`) The wrapping method. Available options: `'mono'` and `'word'`.
+(Default: `'word'`) The wrapping method. Available options:
 - `'mono'` method wraps text character by character.
 - `'word'` method wraps text word by word.
 
 <h1></h1>
 
 #### **`alignment`**
-(Default: `'left'`) The alignment of the wrapped text. Available options: `'left'`, `'center'`, `'right'`,
-(`'fill'` or `'fill-left'`), `'fill-center'`, and `'fill-right'`.
+(Default: `'left'`) The alignment of the wrapped text. Available options:
 - `'left'`: Aligns text to the start of the line.
 - `'center'`: Centers text within the line.
 - `'right'`: Aligns text to the end of the line.
@@ -117,7 +121,7 @@ as each attribute has type checking, which may reduce performance.
 (Default: `None`) The character used to separate words.
 - `None`: Uses whitespace as the separator.
 - `str`: Uses the specified character.
-- `Iterable`: Uses multiple specified characters.
+- `Iterable[str]`: Uses multiple specified characters.
 
 <h1></h1>
 
@@ -164,6 +168,8 @@ If the function calculates only the width, it must return a single value of type
 
 ### Methods of [`TextWrapper`](#textwrapper):
 
+> Note: All methods can be called outside the [`TextWrapper`](#textwrapper) like external functions.
+
 <h1></h1>
 
 #### **`copy`**
@@ -177,7 +183,7 @@ character.
 
 For example:
 ```py
->>> TextWrapper().sanitize("\tHello   World!   ")
+>>> TextWrapper().sanitize("\tHello \nWorld!\r ")
 'Hello World!'
 ```
 
@@ -186,7 +192,7 @@ For example:
 #### **`wrap(text, return_details=False)`**
 Returns a list of wrapped text strings. If `return_details=True`, returns a dictionary containing:
 - `'wrapped'`: A list of wrapped text fragments.
-- `'indiced'`: A set of indices marking line breaks (starting from `0`, like programming indices).
+- `'indiced'`: A set of indices marking the end of line (starting from `0`, like programming indices).
 
 For example:
 ```py
@@ -199,7 +205,7 @@ For example:
 <h1></h1>
 
 #### **`align(text, return_details=False)`**
-Returns a list of tuples, where each tuple contains `(x, y, text)`, representing the wrapped text along with its
+Returns a list of tuples, where each tuple contains `(xPosition, yPosition, text)`, representing the wrapped text along with its
 coordinates.
 > Note: [`sizefunc`](#sizefunc) must return both width and height.
 
@@ -222,7 +228,7 @@ For example:
 
 #### **`fillstr(text)`**
 Returns a string with wrapped text formatted for monospace fonts.
-> Note: [`width`](#width), [`line_padding`](#line_padding), and the output of [`sizefunc`](#sizefunc) must return `int`,
+> Note: [`width`](#width), [`line_padding`](#line_padding), and the output of [`sizefunc`](#sizefunc) (size or just length) must return `int`,
 not `float`!
 
 For example:

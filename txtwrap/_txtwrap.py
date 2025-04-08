@@ -1,16 +1,14 @@
+"""
+Internal txtwrap module
+"""
+
 from collections.abc import Iterable
 from re import compile, escape
 
 # Tools ----------------------------------------------------------------------------------------------------------------
 
 pdict = type('pdict', (dict,), {
-    '__repr__': lambda self : '{}({{\n    {}\n}})'.format(
-            self.__class__.__name__,
-            ',\n    '.join(
-                '{!r}: {!r}'.format(key, value)
-                for key, value in self.items()
-            )
-        ) if self else self.__class__.__name__ + '()',
+    '__repr__': lambda self : '{}({})'.format(self.__class__.__name__, dict.__repr__(self)),
     '__setattr__': dict.__setitem__,
     '__getattr__': lambda self, key: self.get(key, None),
     '__delattr__': dict.__delitem__
@@ -51,7 +49,7 @@ def word(text, width, fillchar, break_on_hyphens, lenfunc, sanitize, split_separ
 
             if break_on_hyphens:
                 for part in split_hyphenated(word):
-                    for wrapped_part in mono(part, width, 0, 0, lenfunc, sanitize, 0):
+                    for wrapped_part in mono(part, width, None, None, lenfunc, sanitize, None):
                         if lenfunc(current_line + wrapped_part) <= width:
                             current_line += wrapped_part
                         else:
@@ -59,7 +57,7 @@ def word(text, width, fillchar, break_on_hyphens, lenfunc, sanitize, split_separ
                                 wrapped.append(current_line)
                             current_line = wrapped_part
             else:
-                for part in mono(word, width, 0, 0, lenfunc, sanitize, 0):
+                for part in mono(word, width, None, None, lenfunc, sanitize, None):
                     if lenfunc(current_line + part) <= width:
                         current_line += part
                     else:
@@ -94,7 +92,7 @@ def justify_fillstr_right(justified_lines, text, width, text_width, fillchar):
 
 # Identities -----------------------------------------------------------------------------------------------------------
 
-__version__ = '2.3.1'
+__version__ = '2.3.2'
 __author__ = 'azzammuhyala'
 __license__ = 'MIT'
 
@@ -135,7 +133,7 @@ LOREM_IPSUM_PARAGRAPHS = (
 
 class TextWrapper:
 
-    """ A class for text wrapping. """
+    """ Text wrapper class """
 
     # Dunder / Magic Methods -------------------------------------------------------------------------------------------
 
@@ -150,7 +148,8 @@ class TextWrapper:
         [PyPi](https://pypi.org/project/txtwrap) for details.
         """
 
-        self._d = pdict()  # dictionary to store a metadata and private variables
+        # dictionary to store a metadata and private variables
+        self._d = pdict()
 
         self.width = width
         self.line_padding = line_padding
@@ -327,9 +326,8 @@ class TextWrapper:
     def max_lines(self, new):
         if not isinstance(new, (int, type(None))):
             raise TypeError("max_lines must be an integer or None")
-        if new is not None:
-            if new <= 0:
-                raise ValueError("max_lines must be greater than 0")
+        if new is not None and new <= 0:
+            raise ValueError("max_lines must be greater than 0")
         self._d.max_lines = new
 
     @preserve_empty.setter
@@ -414,9 +412,9 @@ class TextWrapper:
         else:
             max_lines = self._d.max_lines
 
-        set_max_lines = max_lines is not None
+        has_max_lines = max_lines is not None
 
-        if set_max_lines and width < lenfunc(placeholder):
+        if has_max_lines and width < lenfunc(placeholder):
             raise ValueError("width must be greater than length of the placeholder")
 
         wrapped = []
@@ -429,15 +427,15 @@ class TextWrapper:
                 wrapped.extend(wrapped_line)
                 lines = len(wrapped)
 
-                if set_max_lines and lines <= max_lines:
+                if has_max_lines and lines <= max_lines:
                     indiced.add(lines - 1)
-                elif not set_max_lines:
+                elif not has_max_lines:
                     indiced.add(lines - 1)
 
             elif preserve_empty:
                 wrapped.append('')
 
-            if set_max_lines and len(wrapped) > max_lines:
+            if has_max_lines and len(wrapped) > max_lines:
                 current_char = ''
 
                 for part in wrapped[max_lines - 1]:
@@ -493,10 +491,9 @@ class TextWrapper:
             no_fill_last_line = not self._d.justify_last_line
             lines_word = [split_fillchar(line) for line in wrapped]
 
-            if minimum_width and any(
-                len(line) > 1 and not (no_fill_last_line and i in indiced)
-                for i, line in enumerate(lines_word)
-            ): use_width = width if wrapped else 0
+            if minimum_width and any(len(line) > 1 and not (no_fill_last_line and i in indiced)
+                                     for i, line in enumerate(lines_word)):
+                use_width = width if wrapped else 0
 
             for i, line in enumerate(wrapped):
                 width_line, height_line = lines_size[i]
@@ -567,10 +564,9 @@ class TextWrapper:
             no_fill_last_line = not self._d.justify_last_line
             lines_word = [split_fillchar(line) for line in wrapped]
 
-            if minimum_width and any(
-                len(line) > 1 and not (no_fill_last_line and i in indiced)
-                for i, line in enumerate(lines_word)
-            ): use_width = width if wrapped else 0
+            if minimum_width and any(len(line) > 1 and not (no_fill_last_line and i in indiced)
+                                     for i, line in enumerate(lines_word)):
+                use_width = width if wrapped else 0
 
             fill_line_padding = '\n'.join(fillchar * use_width for _ in range(line_padding))
 

@@ -5,7 +5,7 @@ with open('README.md', encoding='utf-8') as readme:
 
 setup(
     name='txtwrap',
-    version='2.3.1',
+    version='2.3.2',
     description='A tool for wrapping and filling text.',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -18,8 +18,11 @@ setup(
     include_package_data=True,
     keywords=['wrap', 'wrapper', 'wrapping', 'wrapped', 'text wrap', 'text wrapper', 'text wrapping', 'text wrapped'],
     classifiers=[
+        'Programming Language :: Python',
         'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.3',
         'Topic :: Software Development :: Libraries :: Python Modules',
-        'License :: OSI Approved :: MIT License'
+        'Topic :: Text Processing',
+        'Topic :: Text Processing :: Filters'
     ]
 )
