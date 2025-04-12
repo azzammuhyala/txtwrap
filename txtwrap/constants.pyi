@@ -1,0 +1,8 @@
+from typing import Tuple
+
+LOREM_IPSUM_WORDS: str
+LOREM_IPSUM_SENTENCES: str
+LOREM_IPSUM_PARAGRAPHS: str
+
+SEPARATOR_WHITESPACE: Tuple[str]
+SEPARATOR_ESCAPE: Tuple[str]

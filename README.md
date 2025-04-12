@@ -1,19 +1,21 @@
 # TxTWrap🔡
 A tool for wrapping and filling text.🔨
 
-Version: **2.3.2** <br>
-Python requires version: **3.3.0+** <br>
-Python stub file requires version: **3.8.0+**
+Package version: **3.0.0** <br>
+Python requires version: **>=3.0.0** <br>
+Python stub file requires version: **>=3.5.0** <br>
 
 - [`LOREM_IPSUM_WORDS`](#lorem-ipsum)
 - [`LOREM_IPSUM_SENTENCES`](#lorem-ipsum)
 - [`LOREM_IPSUM_PARAGRAPHS`](#lorem-ipsum)
-- [`TextWrapper`](#textwrapper) (🔨 Fixed)
-- [`sanitize`](#sanitizetext)
-- [`wrap`](#wraptext-return_detailsfalse)
-- [`align`](#aligntext-return_detailsfalse)
-- [`fillstr`](#fillstrtext)
-- [`shorten`](#shortentext)
+- [`SEPARATOR_WHITESPACE`](#separators) (➕ New)
+- [`SEPARATOR_ESCAPE`](#separators) (➕ New)
+- [`TextWrapper`](#textwrapper) (✅ Updated)
+- [`sanitize`](#sanitizetext) (🛠️ Fixed)
+- [`wrap`](#wraptext-return_detailsfalse) (✅ Updated)
+- [`align`](#aligntext-return_detailsfalse) (🛠️ Fixed)
+- [`fillstr`](#fillstrtext) (🛠️ Fixed)
+- [`shorten`](#shortentext) (🛠️ Fixed)
 
 # Documents📄
 This module is inspired by the [`textwrap`](https://docs.python.org/3/library/textwrap.html) module, which provides
@@ -25,7 +27,9 @@ filling _monospace fonts_ but also for other font types, such as _Arial_, _Times
 
 <h1></h1>
 
-## Lorem ipsum
+## Constants
+
+### Lorem ipsum
 ```py
 LOREM_IPSUM_WORDS
 LOREM_IPSUM_SENTENCES
@@ -38,24 +42,39 @@ A _Lorem Ipsum_ collection of words, sentences, and paragraphs that can be used 
 
 <h1></h1>
 
+### Separators
+```py
+SEPARATOR_WHITESPACE
+SEPARATOR_ESCAPE
+```
+A collection of separators that can be used to separate text.
+- `SEPARATOR_WHITESPACE` contains whitespace characters.
+- `SEPARATOR_ESCAPE` contains whitespace characters including `'\0'`, `'\a'`, and `'\b'`.
+
+To use this, assign this constant to the [`separator`](#separator) parameter.
+
+<h1></h1>
+
 ## `TextWrapper`
 ```py
 class TextWrapper:
+
     def __init__(
         self,
         width: Union[int, float] = 70,
         line_padding: Union[int, float] = 0,
-        method: Literal['mono', 'word'] = 'word',
+        mode: Literal['mono', 'word'] = 'word',
         alignment: Literal['left', 'center', 'right', 'fill', 'fill-left', 'fill-center', 'fill-right'] = 'left',
         placeholder: str = '...',
         fillchar: str = ' ',
         separator: Optional[Union[str, Iterable[str]]] = None,
         max_lines: Optional[int] = None,
-        preserve_empty: bool = True,
+        preserve_empty_lines: bool = True,
         minimum_width: bool = True,
+        drop_separator: bool = False,
         justify_last_line: bool = False,
         break_on_hyphens: bool = True,
-        sizefunc: Optional[Callable[[str], Union[Tuple[Union[int, float], Union[int, float]], int, float]]] = None,
+        sizefunc: Optional[Callable[[str], Union[Tuple[Union[int, float], Union[int, float]], int, float]]] = None
     ) -> None
 ```
 A class that handles all functions available in this module. Each keyword argument corresponds to its attribute.
@@ -88,10 +107,10 @@ as each attribute has type checking, which may reduce performance.
 
 <h1></h1>
 
-#### **`method`**
-(Default: `'word'`) The wrapping method. Available options:
-- `'mono'` method wraps text character by character.
-- `'word'` method wraps text word by word.
+#### **`mode`**
+(Default: `'word'`) The wrapping mode. Available options:
+- `'mono'` make text wraps character by character.
+- `'word'` make text wraps word by word.
 
 <h1></h1>
 
@@ -133,7 +152,7 @@ as each attribute has type checking, which may reduce performance.
 
 <h1></h1>
 
-#### **`preserve_empty`**
+#### **`preserve_empty_lines`**
 (Default: `True`) Retains empty lines in the wrapped text.
 
 <h1></h1>
@@ -141,6 +160,11 @@ as each attribute has type checking, which may reduce performance.
 #### **`minimum_width`**
 (Default: `True`) Uses the minimum required line width. Some wrapped lines may be shorter than the specified width, so
 enabling this attribute removes unnecessary empty space.
+
+<h1></h1>
+
+#### **`drop_separator`**
+(Default: `False`) Removes the separator between more than one word at a time.
 
 <h1></h1>
 
@@ -170,6 +194,15 @@ If the function calculates only the width, it must return a single value of type
 
 > Note: All methods can be called outside the [`TextWrapper`](#textwrapper) like external functions.
 
+For example:
+```py
+>>> txtwrap.TextWrapper(20, placeholder='[...]').shorten("Hello World!")
+```
+is equivalent to:
+```py
+>>> txtwrap.shorten("Hello World!", 20, placeholder='[...]')
+```
+
 <h1></h1>
 
 #### **`copy`**
@@ -192,44 +225,56 @@ For example:
 #### **`wrap(text, return_details=False)`**
 Returns a list of wrapped text strings. If `return_details=True`, returns a dictionary containing:
 - `'wrapped'`: A list of wrapped text fragments.
-- `'indiced'`: A set of indices marking the end of line (starting from `0`, like programming indices).
+- `'start_lines'`: A set of indices marking the start of line.
+- `'end_lines'`: A set of indices marking the end of line.
 
 For example:
 ```py
 >>> TextWrapper(width=15).wrap(LOREM_IPSUM_WORDS)
 ['Lorem ipsum', 'odor amet,', 'consectetuer', 'adipiscing', 'elit.']
->>> TextWrapper(width=15).wrap(LOREM_IPSUM_WORDS, return_details=True)
-{'wrapped': ['Lorem ipsum', 'odor amet,', 'consectetuer', 'adipiscing', 'elit.'], 'indiced': {4}}
+>>> info = TextWrapper(width=15).wrap(LOREM_IPSUM_WORDS, return_details=True)
+>>> info
+{'wrapped': ['Lorem ipsum', 'odor amet,', 'consectetuer', 'adipiscing', 'elit.'], 'start_lines': {1}, 'end_lines': {5}}
+>>> info['wrapped'][next(iter(info['start_lines'])) - 1]
+'Lorem ipsum'
+>>> info['wrapped'][next(iter(info['end_lines'])) - 1]
+'elit.'
 ```
 
 <h1></h1>
 
 #### **`align(text, return_details=False)`**
-Returns a list of tuples, where each tuple contains `(xPosition, yPosition, text)`, representing the wrapped text along with its
-coordinates.
+Returns a list of tuples, where each tuple contains `(xPosition, yPosition, text)`, representing the wrapped text along
+with its coordinates.
 > Note: [`sizefunc`](#sizefunc) must return both width and height.
 
 If `return_details=True`, returns a dictionary containing:
 - `'aligned'`: A list of wrapped text with coordinate data.
-- `'wrapped'`: The result from wrap.
-- `'indiced'`: The indices of line breaks.
-- `'size'`: The calculated text size.
+- `'wrapped'`: A list of wrapped text fragments.
+- `'start_lines'`: A set of indices marking the start of line.
+- `'end_lines'`: A set of indices marking the end of line.
+- `'size'`: A calculated text size.
 
 For example:
 ```py
 >>> TextWrapper(width=20).align(LOREM_IPSUM_WORDS)
 [(0, 0, 'Lorem ipsum odor'), (0, 1, 'amet, consectetuer'), (0, 2, 'adipiscing elit.')]
->>> TextWrapper(width=20).align(LOREM_IPSUM_WORDS, return_details=True)
+>>> info = TextWrapper(width=20).align(LOREM_IPSUM_WORDS, return_details=True)
+>>> info
 {'aligned': [(0, 0, 'Lorem ipsum odor'), (0, 1, 'amet, consectetuer'), (0, 2, 'adipiscing elit.')], 'wrapped': [
-'Lorem ipsum odor', 'amet, consectetuer', 'adipiscing elit.'], 'indiced': {2}, 'size': (18, 3)}
+'Lorem ipsum odor', 'amet, consectetuer', 'adipiscing elit.'], 'start_lines': {1}, 'end_lines': {3}, 'size': (18, 3)}
+>>> info['wrapped'][next(iter(info['start_lines'])) - 1]
+'Lorem ipsum odor'
+>>> info['wrapped'][next(iter(info['end_lines'])) - 1]
+'adipiscing elit.'
 ```
 
 <h1></h1>
 
 #### **`fillstr(text)`**
 Returns a string with wrapped text formatted for monospace fonts.
-> Note: [`width`](#width), [`line_padding`](#line_padding), and the output of [`sizefunc`](#sizefunc) (size or just length) must return `int`,
-not `float`!
+> Note: [`width`](#width), [`line_padding`](#line_padding), and the output of [`sizefunc`](#sizefunc)
+(size or just length) must return `int`, not `float`!
 
 For example:
 ```py
@@ -273,12 +318,13 @@ def render_wrap(
     color: pygame.Color,
     background: Optional[pygame.Color] = None,
     line_padding: int = 0,
-    method: Literal['word', 'mono'] = 'word',
+    wrap_mode: Literal['word', 'mono'] = 'word',
     alignment: Literal['left', 'center', 'right', 'fill', 'fill-left', 'fill-center', 'fill-right'] = 'left',
     placeholder: str = '...',
     max_lines: Optional[int] = None,
-    preserve_empty: bool = True,
+    preserve_empty_lines: bool = True,
     minimum_width: bool = True,
+    drop_separator: bool = False,
     justify_last_line: bool = False,
     break_on_hyphens: bool = True
 
@@ -288,12 +334,13 @@ def render_wrap(
         text=text,
         width=width,
         line_padding=line_padding,
-        method=method,
+        mode=wrap_mode,
         alignment=alignment,
         placeholder=placeholder,
         max_lines=max_lines,
-        preserve_empty=preserve_empty,
+        preserve_empty_lines=preserve_empty_lines,
         minimum_width=minimum_width,
+        drop_separator=drop_separator,
         justify_last_line=justify_last_line,
         break_on_hyphens=break_on_hyphens,
         return_details=True,
