@@ -28,7 +28,7 @@ def fillstr_right(justified_lines, text, width, text_width, fillchar):
     justified_lines.append(fillchar * (width - text_width) + text)
 
 hyphenate_parrent = r'''
-(?<=-)      # Positive lookbehind -> make sure there is a '-' before the current position
-(?=(?!-).)  # Positive lookahead -> make sure the character after is NOT '-' (avoid '--'), but still have one character
+(?<=-)      # positive lookbehind: make sure there is a '-' before the current position
+(?=(?!-).)  # positive lookahead: make sure the character after is NOT '-' (avoid '--'), but still have one character
 '''
 split_hyphenated = re.compile(hyphenate_parrent, re.VERBOSE).split

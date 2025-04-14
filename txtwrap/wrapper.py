@@ -1,3 +1,4 @@
+import copy
 import re
 
 from .constants import SEPARATOR_WHITESPACE
@@ -10,13 +11,8 @@ class TextWrapper:
     __slots__ = ('_d',)
 
     def __init__(self, width=70, line_padding=0, mode='word', alignment='left', placeholder='...', fillchar=' ',
-                 separator=None, max_lines=None, preserve_empty_lines=True, minimum_width=True, justify_last_line=False,
-                 break_on_hyphens=True, drop_separator=False, sizefunc=None):
-
-        """
-        See txtwrap module documentation on [GitHub](https://github.com/azzammuhyala/txtwrap) or on
-        [PyPi](https://pypi.org/project/txtwrap) for details.
-        """
+                 separator=None, max_lines=None, preserve_empty_lines=True, minimum_width=True, drop_separator=False,
+                 justify_last_line=False, break_on_hyphens=True, sizefunc=None):
 
         # dictionary to store a metadata and private variables
         self._d = _utils.pdict()
@@ -31,19 +27,16 @@ class TextWrapper:
         self.max_lines = max_lines
         self.preserve_empty_lines = preserve_empty_lines
         self.minimum_width = minimum_width
+        self.drop_separator = drop_separator
         self.justify_last_line = justify_last_line
         self.break_on_hyphens = break_on_hyphens
-        self.drop_separator = drop_separator
         self.sizefunc = sizefunc
 
     def __repr__(self):
         return '{}({})'.format(
             type(self).__name__,
             ', '.join(
-                '{}={!r}'.format(
-                    name,
-                    getattr(self, name, None)  # if did't find the attribute, use the default None
-                )
+                '{}={!r}'.format(name, getattr(self, name, None))
                 for i, name in enumerate(self.__init__.__code__.co_varnames)
                 if i != 0  # skip self
             )
@@ -57,10 +50,18 @@ class TextWrapper:
         )
 
     def __copy__(self):
-        return self.copy()
+        return TextWrapper(**{
+            name: getattr(self, name)
+            for i, name in enumerate(self.__init__.__code__.co_varnames)
+            if i != 0  # skip self
+        })
 
-    def __deepcopy__(self, memo):
-        return self.copy()
+    def __deepcopy__(self, memo=None):
+        return TextWrapper(**{
+            name: copy.deepcopy(getattr(self, name), memo)
+            for i, name in enumerate(self.__init__.__code__.co_varnames)
+            if i != 0  # skip self
+        })
 
     @property
     def width(self):
@@ -351,11 +352,7 @@ class TextWrapper:
         return wrapped
 
     def copy(self):
-        return TextWrapper(**{
-            name: getattr(self, name)
-            for i, name in enumerate(self.__init__.__code__.co_varnames)
-            if i != 0  # skip self
-        })
+        return self.__copy__()
 
     def sanitize(self, text):
         if not isinstance(text, str):
@@ -385,32 +382,32 @@ class TextWrapper:
             raise ValueError("width must be greater than length of the placeholder")
 
         wrapped = []
-        start_lines = set()
-        end_lines = set()
+        start_lines = []
+        end_lines = []
 
         for line in text.splitlines():
             wrapped_line = wrapfunc(line)
 
             if wrapped_line:
-                start_lines.add(len(wrapped) + 1)  # add 1 line for next wrapped_line were added
+                start_lines.append(len(wrapped) + 1)  # add 1 line for next wrapped_line were added
                 wrapped.extend(wrapped_line)
 
                 nline = len(wrapped)
 
                 if has_max_lines and nline <= max_lines:
                     # only added if it has the max_lines attribute and the current line is no more than max_lines
-                    end_lines.add(nline)
+                    end_lines.append(nline)
                 elif not has_max_lines:
                     # if not set
-                    end_lines.add(nline)
+                    end_lines.append(nline)
 
             elif preserve_empty_lines:
                 wrapped.append('')  # adding an empty string (usually occurs when encountering an empty line)
 
                 nline = len(wrapped)
 
-                start_lines.add(nline)
-                end_lines.add(nline)
+                start_lines.append(nline)
+                end_lines.append(nline)
 
             if has_max_lines and len(wrapped) > max_lines:
                 # cut off the excess part of the wrapper and also add a placeholder to indicate that the wrapper has
@@ -425,7 +422,7 @@ class TextWrapper:
                 wrapped[max_lines - 1] = current_part + placeholder
                 wrapped = wrapped[:max_lines]
 
-                end_lines.add(max_lines)
+                end_lines.append(max_lines)
                 break
 
         if return_details:
@@ -454,7 +451,7 @@ class TextWrapper:
         wrapped_info = self.wrap(text, True)
 
         wrapped = wrapped_info['wrapped']
-        end_lines = wrapped_info['end_lines']
+        end_lines = set(wrapped_info['end_lines'])
 
         aligned = []
         offset_y = 0
@@ -510,7 +507,7 @@ class TextWrapper:
                 'aligned': aligned,
                 'wrapped': wrapped,
                 'start_lines': wrapped_info['start_lines'],
-                'end_lines': end_lines,
+                'end_lines': wrapped_info['end_lines'],
                 'size': (use_width, offset_y - line_padding)
             }
 
@@ -531,7 +528,7 @@ class TextWrapper:
         wrapped_info = self.wrap(text, True)
 
         wrapped = wrapped_info['wrapped']
-        end_lines = wrapped_info['end_lines']
+        end_lines = set(wrapped_info['end_lines'])
 
         justified_lines = []
 
@@ -634,7 +631,8 @@ def fillstr(text, width=70, line_padding=0, mode='word', alignment='left', place
                        drop_separator=drop_separator, justify_last_line=justify_last_line,
                        break_on_hyphens=break_on_hyphens, sizefunc=sizefunc).fillstr(text)
 
-def shorten(text, width=70, mode='word', fillchar=' ', placeholder='...', separator=None, drop_separator=True,
-            sizefunc=None):
-    return TextWrapper(width=width, mode=mode, fillchar=fillchar, placeholder=placeholder, separator=separator,
-                       drop_separator=drop_separator, sizefunc=sizefunc).shorten(text)
+def shorten(text, width=70, mode='word', placeholder='...', fillchar=' ', separator=None, drop_separator=True,
+            break_on_hyphens=True, sizefunc=None):
+    return TextWrapper(width=width, mode=mode, placeholder=placeholder, fillchar=fillchar, separator=separator,
+                       drop_separator=drop_separator, break_on_hyphens=break_on_hyphens,
+                       sizefunc=sizefunc).shorten(text)

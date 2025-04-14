@@ -1,18 +1,18 @@
 # TxTWrap🔡
 A tool for wrapping and filling text.🔨
 
-Package version: **3.0.0** <br>
+Package version: **3.0.1** <br>
 Python requires version: **>=3.0.0** <br>
 Python stub file requires version: **>=3.5.0** <br>
 
 - [`LOREM_IPSUM_WORDS`](#lorem-ipsum)
 - [`LOREM_IPSUM_SENTENCES`](#lorem-ipsum)
 - [`LOREM_IPSUM_PARAGRAPHS`](#lorem-ipsum)
-- [`SEPARATOR_WHITESPACE`](#separators) (➕ New)
-- [`SEPARATOR_ESCAPE`](#separators) (➕ New)
-- [`TextWrapper`](#textwrapper) (✅ Updated)
+- [`SEPARATOR_WHITESPACE`](#separators)
+- [`SEPARATOR_ESCAPE`](#separators)
+- [`TextWrapper`](#textwrapper) (🛠️ Fixed)
 - [`sanitize`](#sanitizetext) (🛠️ Fixed)
-- [`wrap`](#wraptext-return_detailsfalse) (✅ Updated)
+- [`wrap`](#wraptext-return_detailsfalse) (🛠️ Fixed)
 - [`align`](#aligntext-return_detailsfalse) (🛠️ Fixed)
 - [`fillstr`](#fillstrtext) (🛠️ Fixed)
 - [`shorten`](#shortentext) (🛠️ Fixed)
@@ -28,6 +28,7 @@ filling _monospace fonts_ but also for other font types, such as _Arial_, _Times
 <h1></h1>
 
 ## Constants
+_File: **txtwrap.constants**_
 
 ### Lorem ipsum
 ```py
@@ -56,6 +57,8 @@ To use this, assign this constant to the [`separator`](#separator) parameter.
 <h1></h1>
 
 ## `TextWrapper`
+_File: **txtwrap.wrapper**_
+
 ```py
 class TextWrapper:
 
@@ -164,7 +167,7 @@ enabling this attribute removes unnecessary empty space.
 <h1></h1>
 
 #### **`drop_separator`**
-(Default: `False`) Removes the separator between more than one word at a time.
+(Default: `False`) Removes excess separators from between words one at a time.
 
 <h1></h1>
 
@@ -206,17 +209,17 @@ is equivalent to:
 <h1></h1>
 
 #### **`copy`**
-Creates and returns a copy of the [`TextWrapper`](#textwrapper) object.
+Creates and returns a copy of the [`TextWrapper`](#textwrapper) object. (External function using `copy.copy`)
 
 <h1></h1>
 
 #### **`sanitize(text)`**
 Removes excessive characters from [`separator`](#separator) and replaces them with the [`fillchar`](#fillchar)
-character.
+character. (It doesn't matter whether [`drop_separator`](#drop_separator) is `False` or `True`)
 
 For example:
 ```py
->>> TextWrapper().sanitize("\tHello \nWorld!\r ")
+>>> txtwrap.sanitize("\tHello \nWorld!\r ")
 'Hello World!'
 ```
 
@@ -225,20 +228,22 @@ For example:
 #### **`wrap(text, return_details=False)`**
 Returns a list of wrapped text strings. If `return_details=True`, returns a dictionary containing:
 - `'wrapped'`: A list of wrapped text fragments.
-- `'start_lines'`: A set of indices marking the start of line.
-- `'end_lines'`: A set of indices marking the end of line.
+- `'start_lines'`: A list of indices marking the start of line.
+- `'end_lines'`: A list of indices marking the end of line.
 
 For example:
 ```py
->>> TextWrapper(width=15).wrap(LOREM_IPSUM_WORDS)
-['Lorem ipsum', 'odor amet,', 'consectetuer', 'adipiscing', 'elit.']
->>> info = TextWrapper(width=15).wrap(LOREM_IPSUM_WORDS, return_details=True)
->>> info
-{'wrapped': ['Lorem ipsum', 'odor amet,', 'consectetuer', 'adipiscing', 'elit.'], 'start_lines': {1}, 'end_lines': {5}}
->>> info['wrapped'][next(iter(info['start_lines'])) - 1]
-'Lorem ipsum'
->>> info['wrapped'][next(iter(info['end_lines'])) - 1]
-'elit.'
+>>> txtwrap.wrap(txtwrap.LOREM_IPSUM_WORDS, width=20)
+['Lorem ipsum odor', 'amet, consectetuer', 'adipiscing elit.']
+>>> wrapped_info = txtwrap.wrap(txtwrap.LOREM_IPSUM_WORDS, width=20, return_details=True)
+>>> start_lines = wrapped_info['start_lines']
+>>> end_lines = wrapped_info['end_lines']
+>>> wrapped_info
+{'wrapped': ['Lorem ipsum odor', 'amet, consectetuer', 'adipiscing elit.'], 'start_lines': [1], 'end_lines': [3]}
+>>> wrapped_info['wrapped'][start_lines[0] - 1]
+'Lorem ipsum odor'
+>>> wrapped_info['wrapped'][end_lines[0] - 1]
+'adipiscing elit.'
 ```
 
 <h1></h1>
@@ -251,21 +256,23 @@ with its coordinates.
 If `return_details=True`, returns a dictionary containing:
 - `'aligned'`: A list of wrapped text with coordinate data.
 - `'wrapped'`: A list of wrapped text fragments.
-- `'start_lines'`: A set of indices marking the start of line.
-- `'end_lines'`: A set of indices marking the end of line.
+- `'start_lines'`: A list of indices marking the start of line.
+- `'end_lines'`: A list of indices marking the end of line.
 - `'size'`: A calculated text size.
 
 For example:
 ```py
->>> TextWrapper(width=20).align(LOREM_IPSUM_WORDS)
+>>> txtwrap.align(txtwrap.LOREM_IPSUM_WORDS, width=20)
 [(0, 0, 'Lorem ipsum odor'), (0, 1, 'amet, consectetuer'), (0, 2, 'adipiscing elit.')]
->>> info = TextWrapper(width=20).align(LOREM_IPSUM_WORDS, return_details=True)
->>> info
+>>> aligned_info = txtwrap.align(txtwrap.LOREM_IPSUM_WORDS, width=20, return_details=True)
+>>> start_lines = aligned_info['start_lines']
+>>> end_lines = aligned_info['end_lines']
+>>> aligned_info
 {'aligned': [(0, 0, 'Lorem ipsum odor'), (0, 1, 'amet, consectetuer'), (0, 2, 'adipiscing elit.')], 'wrapped': [
-'Lorem ipsum odor', 'amet, consectetuer', 'adipiscing elit.'], 'start_lines': {1}, 'end_lines': {3}, 'size': (18, 3)}
->>> info['wrapped'][next(iter(info['start_lines'])) - 1]
+'Lorem ipsum odor', 'amet, consectetuer', 'adipiscing elit.'], 'start_lines': [1], 'end_lines': [3], 'size': (18, 3)}
+>>> aligned_info['wrapped'][start_lines[0] - 1]
 'Lorem ipsum odor'
->>> info['wrapped'][next(iter(info['end_lines'])) - 1]
+>>> aligned_info['wrapped'][end_lines[0] - 1]
 'adipiscing elit.'
 ```
 
@@ -278,7 +285,7 @@ Returns a string with wrapped text formatted for monospace fonts.
 
 For example:
 ```py
->>> s = TextWrapper(width=20).fillstr(LOREM_IPSUM_WORDS)
+>>> s = txtwrap.fillstr(txtwrap.LOREM_IPSUM_WORDS, width=20)
 >>> s
 'Lorem ipsum odor  \namet, consectetuer\nadipiscing elit.  '
 >>> print(s)
@@ -295,7 +302,7 @@ if truncated.
 
 For example:
 ```py
->>> TextWrapper(width=20).shorten(LOREM_IPSUM_WORDS)
+>>> txtwrap.shorten(txtwrap.LOREM_IPSUM_WORDS, width=20)
 'Lorem ipsum odor...'
 ```
 

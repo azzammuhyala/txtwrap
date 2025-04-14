@@ -1,17 +1,21 @@
 from setuptools import find_packages, setup
 
-with open('README.md', encoding='utf-8') as readme:
-    long_description = readme.read()
+with open('README.md', 'r', encoding='utf-8') as file:
+    long_description = file.read()
 
 setup(
     name='txtwrap',
-    version='3.0.0',
+    version='3.0.1',
     description='A tool for wrapping and filling text.',
     long_description=long_description,
     long_description_content_type='text/markdown',
     author='azzammuhyala',
     author_email='azzammuhyala@gmail.com',
     url='https://github.com/azzammuhyala/txtwrap',
+    project_urls={
+        'Source': 'https://github.com/azzammuhyala/txtwrap',
+        'Bug Tracker': 'https://github.com/azzammuhyala/txtwrap/issues'
+    },
     license='MIT',
     python_requires='>=3.0',
     packages=find_packages(),

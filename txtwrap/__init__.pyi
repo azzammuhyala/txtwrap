@@ -1,10 +1,10 @@
-# Define the packages
+# define the packages
 
 from . import constants as constants
 from . import identities as identities
 from . import wrapper as wrapper
 
-# Define the main variables, functions, classes to be exported
+# define the main variables, functions, classes to be exported
 
 from .constants import (
     LOREM_IPSUM_WORDS as LOREM_IPSUM_WORDS,

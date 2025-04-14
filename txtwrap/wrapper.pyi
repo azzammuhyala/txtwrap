@@ -1,4 +1,4 @@
-from typing import overload, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import overload, Callable, Dict, Iterable, List, Optional, Tuple, Union
 try:
     from typing import Literal
 except ImportError:
@@ -28,7 +28,7 @@ class TextWrapper:
     def __repr__(self) -> str: ...
     def __str__(self) -> str: ...
     def __copy__(self) -> 'TextWrapper': ...
-    def __deepcopy__(self, memo: Dict) -> 'TextWrapper': ...
+    def __deepcopy__(self, memo: Optional[Dict] = None) -> 'TextWrapper': ...
 
     # Properties -------------------------------------------------------------------------------------------------------
 
@@ -110,7 +110,7 @@ class TextWrapper:
         self,
         text: str,
         return_details: Literal[True] = True
-    ) -> Dict[Literal['wrapped', 'start_lines', 'end_lines'], Union[List[str], Set[int]]]: ...
+    ) -> Dict[Literal['wrapped', 'start_lines', 'end_lines'], Union[List[str], List[int]]]: ...
     @overload
     def align(
         self,
@@ -123,10 +123,10 @@ class TextWrapper:
         text: str,
         return_details: Literal[True] = True
     ) -> Dict[Literal['aligned', 'wrapped', 'start_lines', 'end_lines', 'size'],
-            Union[List[Tuple[Union[int, float], Union[int, float], str]],
-                  List[str],
-                  Set[int],
-                  Tuple[Union[int, float], Union[int, float]]]]: ...
+              Union[List[Tuple[Union[int, float], Union[int, float], str]],
+                    List[str],
+                    List[int],
+                    Tuple[Union[int, float], Union[int, float]]]]: ...
     def fillstr(self, text: str) -> str: ...
     def shorten(self, text: str) -> str: ...
 
@@ -168,7 +168,7 @@ def wrap(
     break_on_hyphens: bool = True,
     return_details: Literal[True] = True,
     sizefunc: Optional[Callable[[str], Union[int, float]]] = None,
-) -> Dict[Literal['wrapped', 'start_lines', 'end_lines'], Union[List[str], Set[int]]]: ...
+) -> Dict[Literal['wrapped', 'start_lines', 'end_lines'], Union[List[str], List[int]]]: ...
 
 @overload
 def align(
@@ -209,10 +209,10 @@ def align(
     return_details: Literal[True] = True,
     sizefunc: Optional[Callable[[str], Tuple[Union[int, float], Union[int, float]]]] = None
 ) -> Dict[Literal['aligned', 'wrapped', 'start_lines', 'end_lines', 'size'],
-        Union[List[Tuple[Union[int, float], Union[int, float], str]],
-              List[str],
-              Set[int],
-              Tuple[Union[int, float], Union[int, float]]]]: ...
+          Union[List[Tuple[Union[int, float], Union[int, float], str]],
+                List[str],
+                List[int],
+                Tuple[Union[int, float], Union[int, float]]]]: ...
 
 def fillstr(
     text: str,
@@ -240,5 +240,6 @@ def shorten(
     fillchar: str = ' ',
     separator: Optional[Union[str, Iterable[str]]] = None,
     drop_separator: bool = True,
+    break_on_hyphens: bool = True,
     sizefunc: Optional[Callable[[str], Union[int, float]]] = None
 ) -> str: ...

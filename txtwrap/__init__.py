@@ -1,5 +1,8 @@
 """
 A tool for wrapping and filling text.
+
+See txtwrap module documentation on [GitHub](https://github.com/azzammuhyala/txtwrap) or on
+[PyPi](https://pypi.org/project/txtwrap) for details.
 """
 
 # Supports only in Python>=3.0.0
