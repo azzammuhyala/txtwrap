@@ -11,7 +11,9 @@ from .constants import (
     LOREM_IPSUM_SENTENCES as LOREM_IPSUM_SENTENCES,
     LOREM_IPSUM_PARAGRAPHS as LOREM_IPSUM_PARAGRAPHS,
     SEPARATOR_WHITESPACE as SEPARATOR_WHITESPACE,
-    SEPARATOR_ESCAPE as SEPARATOR_ESCAPE
+    SEPARATOR_ESCAPE as SEPARATOR_ESCAPE,
+    SEPARATOR_NEWLINE as SEPARATOR_NEWLINE,
+    SEPARATOR_NEWLINE_AND_BREAK as SEPARATOR_NEWLINE_AND_BREAK
 )
 
 from .identities import (
@@ -22,7 +24,6 @@ from .identities import (
 
 from .wrapper import (
     TextWrapper as TextWrapper,
-    sanitize as sanitize,
     wrap as wrap,
     align as align,
     fillstr as fillstr,

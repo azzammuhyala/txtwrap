@@ -1,21 +1,22 @@
 # TxTWrap🔡
 A tool for wrapping and filling text.🔨
 
-Package version: **3.0.1** <br>
+Package version: **3.1.0** <br>
 Python requires version: **>=3.0.0** <br>
 Python stub file requires version: **>=3.5.0** <br>
 
 - [`LOREM_IPSUM_WORDS`](#lorem-ipsum)
 - [`LOREM_IPSUM_SENTENCES`](#lorem-ipsum)
 - [`LOREM_IPSUM_PARAGRAPHS`](#lorem-ipsum)
-- [`SEPARATOR_WHITESPACE`](#separators)
-- [`SEPARATOR_ESCAPE`](#separators)
-- [`TextWrapper`](#textwrapper) (🛠️ Fixed)
-- [`sanitize`](#sanitizetext) (🛠️ Fixed)
-- [`wrap`](#wraptext-return_detailsfalse) (🛠️ Fixed)
-- [`align`](#aligntext-return_detailsfalse) (🛠️ Fixed)
-- [`fillstr`](#fillstrtext) (🛠️ Fixed)
-- [`shorten`](#shortentext) (🛠️ Fixed)
+- [`SEPARATOR_WHITESPACE`](#separators) (✅ Updated)
+- [`SEPARATOR_ESCAPE`](#separators) (✅ Updated)
+- [`SEPARATOR_NEWLINE`](#separators) (➕ New)
+- [`SEPARATOR_NEWLINE_AND_BREAK`](#separators) (➕ New)
+- [`TextWrapper`](#textwrapper) (✅ Updated)
+- [`wrap`](#wraptext-return_detailsfalse) (✅ Updated)
+- [`align`](#aligntext-return_detailsfalse) (✅ Updated)
+- [`fillstr`](#fillstrtext) (✅ Updated)
+- [`shorten`](#shortentext) (✅ Updated)
 
 # Documents📄
 This module is inspired by the [`textwrap`](https://docs.python.org/3/library/textwrap.html) module, which provides
@@ -47,12 +48,14 @@ A _Lorem Ipsum_ collection of words, sentences, and paragraphs that can be used 
 ```py
 SEPARATOR_WHITESPACE
 SEPARATOR_ESCAPE
+SEPARATOR_NEWLINE
+SEPARATOR_NEWLINE_AND_BREAK
 ```
 A collection of separators that can be used to separate text.
-- `SEPARATOR_WHITESPACE` contains whitespace characters.
-- `SEPARATOR_ESCAPE` contains whitespace characters including `'\0'`, `'\a'`, and `'\b'`.
-
-To use this, assign this constant to the [`separator`](#separator) parameter.
+- `SEPARATOR_WHITESPACE` (for [`word_separator`](#word_separator)) regex contains whitespace characters.
+- `SEPARATOR_ESCAPE` (for [`word_separator`](#word_separator)) regex contains whitespace characters including `'\a'`, `'\b'`, and `'\0'`.
+- `SEPARATOR_NEWLINE` (for [`newline_separator`](#newline_separator)) regex contains newline characters.
+- `SEPARATOR_NEWLINE_AND_BREAK` (for [`newline_separator`](#newline_separator)) regex contains newline characters including breaks tag `<br>`.
 
 <h1></h1>
 
@@ -69,15 +72,17 @@ class TextWrapper:
         mode: Literal['mono', 'word'] = 'word',
         alignment: Literal['left', 'center', 'right', 'fill', 'fill-left', 'fill-center', 'fill-right'] = 'left',
         placeholder: str = '...',
-        fillchar: str = ' ',
-        separator: Optional[Union[str, Iterable[str]]] = None,
+        space_character: str = ' ',
+        newline_character: str = '\n',
+        word_separator: Optional[Union[str, Tuple[str, int]]] = None,
+        newline_separator: Optional[Union[str, Tuple[str, int]]] = None,
         max_lines: Optional[int] = None,
-        preserve_empty_lines: bool = True,
+        empty_lines: bool = True,
         minimum_width: bool = True,
-        drop_separator: bool = False,
+        excess_word_separator: bool = False,
         justify_last_line: bool = False,
         break_on_hyphens: bool = True,
-        sizefunc: Optional[Callable[[str], Union[Tuple[Union[int, float], Union[int, float]], int, float]]] = None
+        size_function: Optional[Callable[[str], Union[Tuple[Union[int, float], Union[int, float]], int, float]]] = None
     ) -> None
 ```
 A class that handles all functions available in this module. Each keyword argument corresponds to its attribute.
@@ -90,9 +95,6 @@ is equivalent to:
 wrapper = TextWrapper()
 wrapper.width = 100
 ```
-You can reuse [`TextWrapper`](#textwrapper) multiple times or modify its options by assigning new values to its
-attributes. However, it is recommended not to reuse [`TextWrapper`](#textwrapper) too frequently inside a specific loop,
-as each attribute has type checking, which may reduce performance.
 
 <h1></h1>
 
@@ -134,16 +136,29 @@ as each attribute has type checking, which may reduce performance.
 
 <h1></h1>
 
-#### **`fillchar`**
-(Default: `' '`) The character used for padding.
+#### **`space_character`**
+(Default: `' '`) The character used for padding and for the word separator character.
 
 <h1></h1>
 
-#### **`separator`**
+#### **`newline_character`**
+(Default: `'\n'`) The character used for line separator.
+
+<h1></h1>
+
+#### **`word_separator`**
 (Default: `None`) The character used to separate words.
 - `None`: Uses whitespace as the separator.
-- `str`: Uses the specified character.
-- `Iterable[str]`: Uses multiple specified characters.
+- `str`: Regex separator in split form.
+- `Tuple[str, int]`: Regex separator in split form with flags.
+
+<h1></h1>
+
+#### **`newline_separator`**
+(Default: `None`) The character used to separate lines.
+- `None`: Uses standard newline as the separator.
+- `str`: Regex separator in split form.
+- `Tuple[str, int]`: Regex separator in split form with flags.
 
 <h1></h1>
 
@@ -155,7 +170,7 @@ as each attribute has type checking, which may reduce performance.
 
 <h1></h1>
 
-#### **`preserve_empty_lines`**
+#### **`empty_lines`**
 (Default: `True`) Retains empty lines in the wrapped text.
 
 <h1></h1>
@@ -166,7 +181,7 @@ enabling this attribute removes unnecessary empty space.
 
 <h1></h1>
 
-#### **`drop_separator`**
+#### **`excess_word_separator`**
 (Default: `False`) Removes excess separators from between words one at a time.
 
 <h1></h1>
@@ -182,7 +197,7 @@ enabling this attribute removes unnecessary empty space.
 
 <h1></h1>
 
-#### **`sizefunc`**
+#### **`size_function`**
 (Default: `None`) A function used to calculate the width and height or only the width of each string.
 
 If the function calculates both width and height, it must return a tuple containing two values:
@@ -213,18 +228,6 @@ Creates and returns a copy of the [`TextWrapper`](#textwrapper) object. (Externa
 
 <h1></h1>
 
-#### **`sanitize(text)`**
-Removes excessive characters from [`separator`](#separator) and replaces them with the [`fillchar`](#fillchar)
-character. (It doesn't matter whether [`drop_separator`](#drop_separator) is `False` or `True`)
-
-For example:
-```py
->>> txtwrap.sanitize("\tHello \nWorld!\r ")
-'Hello World!'
-```
-
-<h1></h1>
-
 #### **`wrap(text, return_details=False)`**
 Returns a list of wrapped text strings. If `return_details=True`, returns a dictionary containing:
 - `'wrapped'`: A list of wrapped text fragments.
@@ -251,7 +254,7 @@ For example:
 #### **`align(text, return_details=False)`**
 Returns a list of tuples, where each tuple contains `(xPosition, yPosition, text)`, representing the wrapped text along
 with its coordinates.
-> Note: [`sizefunc`](#sizefunc) must return both width and height.
+> Note: [`size_function`](#size_function) must return both width and height.
 
 If `return_details=True`, returns a dictionary containing:
 - `'aligned'`: A list of wrapped text with coordinate data.
@@ -280,7 +283,7 @@ For example:
 
 #### **`fillstr(text)`**
 Returns a string with wrapped text formatted for monospace fonts.
-> Note: [`width`](#width), [`line_padding`](#line_padding), and the output of [`sizefunc`](#sizefunc)
+> Note: [`width`](#width), [`line_padding`](#line_padding), and the output of [`size_function`](#size_function)
 (size or just length) must return `int`, not `float`!
 
 For example:
@@ -314,6 +317,7 @@ For example:
 ```py
 from typing import Literal, Optional
 from txtwrap import align, LOREM_IPSUM_PARAGRAPHS
+
 import pygame
 
 def render_wrap(
@@ -329,9 +333,9 @@ def render_wrap(
     alignment: Literal['left', 'center', 'right', 'fill', 'fill-left', 'fill-center', 'fill-right'] = 'left',
     placeholder: str = '...',
     max_lines: Optional[int] = None,
-    preserve_empty_lines: bool = True,
+    empty_lines: bool = True,
     minimum_width: bool = True,
-    drop_separator: bool = False,
+    excess_word_separator: bool = False,
     justify_last_line: bool = False,
     break_on_hyphens: bool = True
 
@@ -345,13 +349,13 @@ def render_wrap(
         alignment=alignment,
         placeholder=placeholder,
         max_lines=max_lines,
-        preserve_empty_lines=preserve_empty_lines,
+        empty_lines=empty_lines,
         minimum_width=minimum_width,
-        drop_separator=drop_separator,
+        excess_word_separator=excess_word_separator,
         justify_last_line=justify_last_line,
         break_on_hyphens=break_on_hyphens,
         return_details=True,
-        sizefunc=font.size
+        size_function=font.size
     )
 
     surface = pygame.Surface(align_info['size'], pygame.SRCALPHA)
@@ -400,5 +404,5 @@ while running:
 ```py
 from txtwrap import shorten, LOREM_IPSUM_SENTENCES
 
-print(shorten(LOREM_IPSUM_SENTENCES, width=50, placeholder='…'))
+print(shorten(LOREM_IPSUM_SENTENCES, width=50, placeholder='\u2026'))
 ```

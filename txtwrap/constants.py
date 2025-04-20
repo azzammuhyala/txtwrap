@@ -1,3 +1,5 @@
+import re
+
 LOREM_IPSUM_WORDS = 'Lorem ipsum odor amet, consectetuer adipiscing elit.'
 LOREM_IPSUM_SENTENCES = (
     'Lorem ipsum odor amet, consectetuer adipiscing elit. In malesuada eros natoque urna felis diam aptent donec. Cubil'
@@ -29,5 +31,7 @@ LOREM_IPSUM_PARAGRAPHS = (
     'aliquet proin. Commodo neque nibh; tempus ad tortor netus. Mattis ultricies nec maximus porttitor non mauris?'
 )
 
-SEPARATOR_WHITESPACE = (' ', '\t', '\n', '\r', '\v', '\f')
-SEPARATOR_ESCAPE = SEPARATOR_WHITESPACE + ('\a', '\b', '\0')
+SEPARATOR_WHITESPACE = r' |\t|\n|\r|\v|\f'
+SEPARATOR_ESCAPE = SEPARATOR_WHITESPACE + r'|\a|\x08|\0'  # \x08 -> \b
+SEPARATOR_NEWLINE = r'\r\n|\n|\r'
+SEPARATOR_NEWLINE_AND_BREAK = (r'</?br\s*/?>|' + SEPARATOR_NEWLINE, re.IGNORECASE)

@@ -15,12 +15,13 @@ from .identities import __version__, __author__, __license__
 
 from .constants import (
     LOREM_IPSUM_WORDS, LOREM_IPSUM_SENTENCES, LOREM_IPSUM_PARAGRAPHS,
-    SEPARATOR_WHITESPACE, SEPARATOR_ESCAPE
+    SEPARATOR_WHITESPACE, SEPARATOR_ESCAPE,
+    SEPARATOR_NEWLINE, SEPARATOR_NEWLINE_AND_BREAK
 )
 
 from .wrapper import (
     TextWrapper,
-    sanitize, wrap, align, fillstr, shorten
+    wrap, align, fillstr, shorten
 )
 
 __all__ = [
@@ -29,8 +30,9 @@ __all__ = [
     'LOREM_IPSUM_PARAGRAPHS',
     'SEPARATOR_WHITESPACE',
     'SEPARATOR_ESCAPE',
+    'SEPARATOR_NEWLINE',
+    'SEPARATOR_NEWLINE_AND_BREAK',
     'TextWrapper',
-    'sanitize',
     'wrap',
     'align',
     'fillstr',
